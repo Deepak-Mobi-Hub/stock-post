@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>REPOCKET Stock Blast Studio</title>
+<meta name="description" content="Create branded stock-blast posts for REPOCKET — multiple orientations, colour themes, one-click copy and download." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1020; --bg2:#111834; --panel:#151c38; --panel2:#1b2547;
+    --line:#26325f; --text:#eaf0ff; --muted:#94a3c8; --accent:#2f6bff;
+    --accent2:#0b3fd6; --accent-soft:rgba(47,107,255,.14); --ok:#22c55e; --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme]){
+      --bg:#eef2fb; --bg2:#e6ecfa; --panel:#ffffff; --panel2:#f4f7ff;
+      --line:#dbe3f5; --text:#0d1428; --muted:#586089; --accent-soft:rgba(47,107,255,.10);
+    }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:'Montserrat',system-ui,-apple-system,Segoe UI,Roboto,sans-serif;
+    background:radial-gradient(1200px 600px at 80% -10%,rgba(47,107,255,.18),transparent 60%),var(--bg);
+    color:var(--text);-webkit-font-smoothing:antialiased;
+  }
+  header.topbar{
+    display:flex;align-items:center;gap:14px;padding:14px 20px;
+    border-bottom:1px solid var(--line);position:sticky;top:0;z-index:5;
+    background:linear-gradient(180deg,rgba(11,16,32,.9),rgba(11,16,32,.6));backdrop-filter:blur(8px);
+  }
+  @media (prefers-color-scheme: light){ header.topbar{background:linear-gradient(180deg,rgba(255,255,255,.9),rgba(255,255,255,.6))} }
+  .brand{display:flex;align-items:center;gap:12px;font-weight:900;letter-spacing:.5px}
+  .brand .mark{width:34px;height:40px;flex:none}
+  .brand .name{font-family:'Anton',sans-serif;font-size:22px;letter-spacing:1px;line-height:1}
+  .brand .name b{color:var(--accent)}
+  .brand small{display:block;font-family:'Montserrat';font-weight:600;font-size:9px;letter-spacing:3px;color:var(--muted);margin-top:2px}
+  header .spacer{flex:1}
+  .ghtag{font-size:12px;color:var(--muted);font-weight:600}
+
+  .layout{display:grid;grid-template-columns:minmax(320px,420px) 1fr;gap:0;min-height:calc(100vh - 69px)}
+  @media (max-width:960px){ .layout{grid-template-columns:1fr} }
+
+  /* ---------- Controls ---------- */
+  .controls{padding:18px;border-right:1px solid var(--line);overflow:auto;max-height:calc(100vh - 69px)}
+  @media (max-width:960px){ .controls{max-height:none;border-right:none;border-bottom:1px solid var(--line)} }
+  .group{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+  .group h3{margin:0 0 10px;font-size:12px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);font-weight:800}
+  label.f{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 5px}
+  label.f:first-of-type{margin-top:0}
+  input[type=text],textarea,select{
+    width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px 12px;font:inherit;font-size:14px;font-weight:600;outline:none;
+  }
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  textarea{resize:vertical;min-height:52px}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+  .row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+
+  .chips{display:flex;flex-wrap:wrap;gap:8px}
+  .chip{
+    border:1px solid var(--line);background:var(--panel2);color:var(--text);
+    border-radius:999px;padding:8px 13px;font-size:12.5px;font-weight:700;cursor:pointer;transition:.15s;
+  }
+  .chip:hover{border-color:var(--accent)}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+
+  .swatches{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+  .sw{height:44px;border-radius:10px;cursor:pointer;border:2px solid transparent;position:relative;overflow:hidden}
+  .sw.active{border-color:#fff;box-shadow:0 0 0 2px var(--accent)}
+  .sw span{position:absolute;left:6px;bottom:4px;font-size:9px;font-weight:800;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.6);letter-spacing:.3px}
+
+  /* stock items */
+  .item{background:var(--panel2);border:1px solid var(--line);border-radius:12px;padding:10px;margin-bottom:10px;position:relative}
+  .item .del{position:absolute;top:8px;right:8px;width:24px;height:24px;border-radius:7px;border:1px solid var(--line);
+    background:transparent;color:var(--muted);cursor:pointer;font-weight:900;line-height:1;font-size:15px}
+  .item .del:hover{color:#fff;background:#e0245e;border-color:#e0245e}
+  .item .grade-row{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:8px}
+  .addbtn{width:100%;border:1px dashed var(--line);background:transparent;color:var(--accent);
+    border-radius:10px;padding:11px;font:inherit;font-weight:800;cursor:pointer;font-size:13px}
+  .addbtn:hover{background:var(--accent-soft)}
+
+  /* ---------- Stage ---------- */
+  .stage{padding:22px;display:flex;flex-direction:column;align-items:center;gap:16px;overflow:auto}
+  .stagebar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:center;width:100%;max-width:760px}
+  .btn{
+    display:inline-flex;align-items:center;gap:8px;border:none;border-radius:11px;padding:12px 18px;
+    font:inherit;font-weight:800;font-size:14px;cursor:pointer;transition:.15s;white-space:nowrap;
+  }
+  .btn svg{width:17px;height:17px}
+  .btn.primary{background:var(--accent);color:#fff;box-shadow:0 6px 18px rgba(47,107,255,.35)}
+  .btn.primary:hover{background:#1f57e6;transform:translateY(-1px)}
+  .btn.ghost{background:var(--panel);color:var(--text);border:1px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--accent)}
+  .btn.ok{background:var(--ok)}
+  .canvas-wrap{
+    width:100%;max-width:620px;background:
+      linear-gradient(45deg,rgba(255,255,255,.04) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.04) 75%) 0 0/24px 24px,
+      linear-gradient(45deg,rgba(255,255,255,.04) 25%,transparent 25%,transparent 75%,rgba(255,255,255,.04) 75%) 12px 12px/24px 24px,
+      var(--panel);
+    border:1px solid var(--line);border-radius:18px;padding:16px;display:flex;justify-content:center;
+  }
+  canvas#poster{max-width:100%;height:auto;border-radius:6px;box-shadow:0 20px 60px rgba(0,0,0,.45)}
+  .hint{font-size:12px;color:var(--muted);text-align:center;max-width:560px}
+  .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(30px);opacity:0;
+    background:#0d1428;border:1px solid var(--accent);color:#fff;padding:12px 18px;border-radius:12px;
+    font-weight:700;font-size:14px;box-shadow:0 12px 40px rgba(0,0,0,.5);transition:.25s;pointer-events:none;z-index:20}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .foot{padding:16px;text-align:center;font-size:11px;color:var(--muted);border-top:1px solid var(--line)}
+  .foot a{color:var(--accent);text-decoration:none}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="brand">
+    <svg class="mark" viewBox="0 0 100 120" aria-hidden="true">
+      <defs><linearGradient id="hg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3aa0ff"/><stop offset="1" stop-color="#0b3fd6"/></linearGradient></defs>
+      <path d="M9 74 V18 a9 9 0 0 1 9-9 h64 a9 9 0 0 1 9 9 V74" fill="none" stroke="#e7ecff" stroke-width="9" stroke-linecap="round"/>
+      <rect x="42" y="15" width="16" height="5" rx="2.5" fill="#e7ecff"/>
+      <path d="M9 60 L50 70 L91 60 V104 a8 8 0 0 1 -8 8 H17 a8 8 0 0 1 -8 -8 Z" fill="url(#hg)"/>
+      <rect x="24" y="82" width="52" height="20" rx="5" fill="none" stroke="rgba(255,255,255,.85)" stroke-width="2" stroke-dasharray="6 5"/>
+    </svg>
+    <div>
+      <div class="name"><b>RE</b>POCKET</div>
+      <small>STOCK&nbsp;BLAST&nbsp;STUDIO</small>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <div class="ghtag">Refurbished Mobiles &amp; Devices Trader</div>
+</header>
+
+<div class="layout">
+  <!-- ============ CONTROLS ============ -->
+  <aside class="controls">
+    <div class="group">
+      <h3>Format</h3>
+      <label class="f">Orientation</label>
+      <div class="chips" id="orient"></div>
+      <label class="f">Colour theme</label>
+      <div class="swatches" id="themes"></div>
+    </div>
+
+    <div class="group">
+      <h3>Headline</h3>
+      <label class="f">Quick preset</label>
+      <div class="chips" id="presets"></div>
+      <label class="f">Main headline</label>
+      <input id="headline" type="text" maxlength="26" value="STOCK BLAST" />
+      <label class="f">Sub-headline</label>
+      <input id="subheadline" type="text" maxlength="60" value="Fresh Wholesale Stock — Ready to Ship" />
+      <label class="f">Badge (top-right)</label>
+      <input id="badge" type="text" maxlength="18" value="NEW ARRIVALS" />
+    </div>
+
+    <div class="group">
+      <h3>Stock list</h3>
+      <div id="items"></div>
+      <button class="addbtn" id="addItem">+ Add stock line</button>
+    </div>
+
+    <div class="group">
+      <h3>Contact &amp; footer</h3>
+      <label class="f">WhatsApp / phone</label>
+      <input id="whatsapp" type="text" maxlength="30" value="+44 7000 000000" />
+      <label class="f">Email</label>
+      <input id="email" type="text" maxlength="40" value="deepak@mobi-hub.com" />
+      <label class="f">Website / handle</label>
+      <input id="website" type="text" maxlength="34" value="repocket.trade" />
+      <div class="row2">
+        <div><label class="f">Currency prefix</label><input id="currency" type="text" maxlength="4" value="£" /></div>
+        <div><label class="f">Footer note</label><input id="note" type="text" maxlength="30" value="Prices ex-VAT" /></div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ============ STAGE ============ -->
+  <main class="stage">
+    <div class="stagebar">
+      <button class="btn primary" id="copyBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        Copy image
+      </button>
+      <button class="btn primary" id="dlJpg">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/></svg>
+        Download JPG
+      </button>
+      <button class="btn ghost" id="dlPng">Download PNG</button>
+    </div>
+
+    <div class="canvas-wrap">
+      <canvas id="poster" width="1080" height="1080"></canvas>
+    </div>
+    <p class="hint">Tip: <b>Copy image</b> puts the poster on your clipboard — paste it straight into WhatsApp, LinkedIn or email. Everything renders in your browser; nothing is uploaded.</p>
+  </main>
+</div>
+
+<div class="foot">
+  Built for <b>REPOCKET</b> · Refurbished Mobiles &amp; Devices Trader — Stock Blast Studio.
+</div>
+
+<div class="toast" id="toast">Copied!</div>
+
+<script>
+/* ============================================================
+   REPOCKET Stock Blast Studio
+   Pure client-side canvas renderer — no dependencies.
+   ============================================================ */
+
+const ORIENTATIONS = {
+  square:   { w:1080, h:1080, label:'Square 1:1' },
+  portrait: { w:1080, h:1350, label:'Post 4:5' },
+  story:    { w:1080, h:1920, label:'Story 9:16' },
+  landscape:{ w:1200, h:675,  label:'Wide 16:9' },
+};
+
+// Each theme: bg = array of gradient stops (top->bottom) or solid; onDark = light logo/text
+const THEMES = {
+  brand:    { name:'Brand',    bg:['#f4f8ff','#e7effe'], onDark:false, accent:'#0b3fd6', accent2:'#3aa0ff', headline:'#0b1a44', text:'#0d1a3a', muted:'#5a6a99', card:'#ffffff', cardLine:'#dbe6ff', priceBg:'#0b3fd6', priceText:'#ffffff' },
+  navy:     { name:'Navy',     bg:['#0b1230','#0a1f52'], onDark:true,  accent:'#3aa0ff', accent2:'#7cc0ff', headline:'#ffffff', text:'#eaf1ff', muted:'#9fb2df', card:'rgba(255,255,255,.06)', cardLine:'rgba(120,160,255,.35)', priceBg:'#3aa0ff', priceText:'#04122e' },
+  midnight: { name:'Midnight', bg:['#05070f','#0d1836'], onDark:true,  accent:'#4d8bff', accent2:'#00e0ff', headline:'#ffffff', text:'#e9f0ff', muted:'#8ea0cf', card:'rgba(255,255,255,.05)', cardLine:'rgba(90,140,255,.4)', priceBg:'#00e0ff', priceText:'#04122e' },
+  electric: { name:'Electric', bg:['#1247ff','#0a2bb0'], onDark:true,  accent:'#ffffff', accent2:'#bcd4ff', headline:'#ffffff', text:'#eef3ff', muted:'#c3d3ff', card:'rgba(255,255,255,.12)', cardLine:'rgba(255,255,255,.35)', priceBg:'#ffffff', priceText:'#0a2bb0' },
+  emerald:  { name:'Emerald',  bg:['#04140f','#0a3a2a'], onDark:true,  accent:'#37e0a0', accent2:'#7cffcf', headline:'#ffffff', text:'#e8fff6', muted:'#8fd7bf', card:'rgba(255,255,255,.05)', cardLine:'rgba(70,220,160,.4)', priceBg:'#37e0a0', priceText:'#04241a' },
+  sunset:   { name:'Sunset',   bg:['#2a1246','#7a1f5a'], onDark:true,  accent:'#ff9d3c', accent2:'#ff5f8f', headline:'#ffffff', text:'#fff0f6', muted:'#e7b8d6', card:'rgba(255,255,255,.08)', cardLine:'rgba(255,157,60,.4)', priceBg:'#ff9d3c', priceText:'#2a1246' },
+  slate:    { name:'Slate',    bg:['#141821','#232a38'], onDark:true,  accent:'#5aa0ff', accent2:'#8fd0ff', headline:'#ffffff', text:'#eef2f8', muted:'#9aa6bd', card:'rgba(255,255,255,.05)', cardLine:'rgba(120,150,200,.35)', priceBg:'#5aa0ff', priceText:'#0d1420' },
+  clean:    { name:'Clean',    bg:['#ffffff','#eef2f8'], onDark:false, accent:'#111827', accent2:'#0b3fd6', headline:'#0b1220', text:'#111827', muted:'#6b7280', card:'#f7f9fc', cardLine:'#e3e8f0', priceBg:'#111827', priceText:'#ffffff' },
+};
+
+const PRESETS = [
+  { h:'STOCK BLAST',     s:'Fresh Wholesale Stock — Ready to Ship',  b:'NEW ARRIVALS' },
+  { h:'NEW ARRIVALS',    s:'Grade A+ Refurbished — Limited Quantity', b:'IN STOCK' },
+  { h:'PRICE DROP',      s:'Best Wholesale Rates This Week',          b:'HOT DEAL' },
+  { h:'FLASH SALE',      s:'First Come, First Served — Ships Today',  b:'24H ONLY' },
+  { h:'BULK OFFER',      s:'Trade & Wholesale Enquiries Welcome',     b:'B2B' },
+];
+
+const state = {
+  orientation:'portrait',
+  theme:'navy',
+  headline:'STOCK BLAST',
+  subheadline:'Fresh Wholesale Stock — Ready to Ship',
+  badge:'NEW ARRIVALS',
+  whatsapp:'+44 7000 000000',
+  email:'deepak@mobi-hub.com',
+  website:'repocket.trade',
+  currency:'£',
+  note:'Prices ex-VAT',
+  items:[
+    { model:'iPhone 13 Pro',   spec:'128GB', grade:'Grade A', qty:'50', price:'419' },
+    { model:'Samsung S22',     spec:'256GB', grade:'Grade A', qty:'40', price:'289' },
+    { model:'iPhone 12',       spec:'64GB',  grade:'Grade B', qty:'80', price:'229' },
+    { model:'iPad Air 4',      spec:'64GB',  grade:'Grade A', qty:'25', price:'279' },
+  ],
+};
+
+const canvas = document.getElementById('poster');
+const ctx = canvas.getContext('2d');
+
+/* ---------- helpers ---------- */
+function roundRectPath(c,x,y,w,h,r){
+  r=Math.min(r,w/2,h/2);
+  c.beginPath();
+  c.moveTo(x+r,y);
+  c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r);
+  c.arcTo(x,y,x+w,y,r);
+  c.closePath();
+}
+function fitText(c,text,max,base,min,weight,family){
+  let s=base;
+  do{ c.font=`${weight} ${s}px ${family}`; if(c.measureText(text).width<=max) break; s-=1; }while(s>min);
+  return s;
+}
+
+/* ---------- logo ---------- */
+function drawLogoIcon(c,x,y,w){
+  const h=w*1.18, r=w*0.13, lw=w*0.10;
+  const th=y+h*0.60;            // frame bottom on sides
+  const pt=y+h*0.50;            // pocket top (sides)
+  const chev=h*0.10;
+  const t=THEMES[state.theme];
+  const frame=t.onDark?'#e7ecff':'#0b0e18';
+  // white/light panel behind top
+  c.save();
+  roundRectPath(c,x,y+lw*0.2,w,h*0.62,r); c.fillStyle=t.onDark?'rgba(255,255,255,.06)':'#ffffff'; c.fill();
+  // frame (inverted U)
+  c.lineWidth=lw; c.strokeStyle=frame; c.lineJoin='round'; c.lineCap='round';
+  c.beginPath();
+  c.moveTo(x+lw/2, th);
+  c.lineTo(x+lw/2, y+r);
+  c.arcTo(x+lw/2, y+lw/2, x+r, y+lw/2, r);
+  c.lineTo(x+w-r, y+lw/2);
+  c.arcTo(x+w-lw/2, y+lw/2, x+w-lw/2, y+r, r);
+  c.lineTo(x+w-lw/2, th);
+  c.stroke();
+  // speaker notch
+  c.lineWidth=w*0.055; c.beginPath();
+  c.moveTo(x+w*0.42, y+lw*1.15); c.lineTo(x+w*0.58, y+lw*1.15); c.stroke();
+  // pocket gradient
+  const g=c.createLinearGradient(x,pt,x+w,y+h);
+  g.addColorStop(0,'#3aa0ff'); g.addColorStop(1,'#0b3fd6');
+  c.fillStyle=g;
+  c.beginPath();
+  c.moveTo(x,pt);
+  c.lineTo(x+w*0.5,pt+chev);
+  c.lineTo(x+w,pt);
+  c.lineTo(x+w,y+h-r);
+  c.arcTo(x+w,y+h,x+w-r,y+h,r);
+  c.lineTo(x+r,y+h);
+  c.arcTo(x,y+h,x,y+h-r,r);
+  c.closePath(); c.fill();
+  // stitch
+  c.setLineDash([w*0.055,w*0.045]); c.lineWidth=w*0.022;
+  c.strokeStyle='rgba(255,255,255,.85)';
+  roundRectPath(c,x+w*0.16,y+h*0.70,w*0.68,h*0.20,w*0.05); c.stroke();
+  c.setLineDash([]);
+  c.restore();
+  return h;
+}
+
+function drawWordmark(c,x,y,size){
+  const t=THEMES[state.theme];
+  c.save();
+  c.textBaseline='alphabetic'; c.textAlign='left';
+  c.font=`400 ${size}px Anton, sans-serif`;
+  try{ c.letterSpacing=`${size*0.01}px`; }catch(e){}
+  // RE (blue gradient)
+  const g=c.createLinearGradient(x,y-size,x,y);
+  g.addColorStop(0,'#3aa0ff'); g.addColorStop(1,'#0b3fd6');
+  c.fillStyle=g; c.fillText('RE',x,y);
+  const reW=c.measureText('RE').width;
+  // POCKET (outline)
+  c.lineWidth=Math.max(1.4,size*0.03); c.strokeStyle=t.headline;
+  c.strokeText('POCKET',x+reW+size*0.06,y);
+  // tagline
+  try{ c.letterSpacing=`${size*0.14}px`; }catch(e){}
+  c.font=`700 ${size*0.16}px Montserrat, sans-serif`;
+  c.fillStyle=t.muted;
+  c.fillText('REFURBISHED MOBILES & DEVICES TRADER', x+2, y+size*0.30);
+  try{ c.letterSpacing='0px'; }catch(e){}
+  c.restore();
+}
+
+/* ---------- main render ---------- */
+function render(){
+  const o=ORIENTATIONS[state.orientation];
+  const t=THEMES[state.theme];
+  const W=o.w, H=o.h;
+  if(canvas.width!==W||canvas.height!==H){ canvas.width=W; canvas.height=H; }
+  const pad=Math.round(W*0.062);
+
+  // background
+  const bg=ctx.createLinearGradient(0,0,W*0.3,H);
+  bg.addColorStop(0,t.bg[0]); bg.addColorStop(1,t.bg[1]);
+  ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+  // decorative glow
+  ctx.save();
+  const rg=ctx.createRadialGradient(W*0.85,H*0.05,10,W*0.85,H*0.05,W*0.7);
+  rg.addColorStop(0,hexA(t.accent2,t.onDark?0.28:0.20)); rg.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle=rg; ctx.fillRect(0,0,W,H);
+  // corner accent bar
+  ctx.fillStyle=t.accent; ctx.fillRect(0,0,W,Math.max(6,H*0.010));
+  ctx.restore();
+
+  let y=pad;
+
+  /* --- header: logo --- */
+  const iconW=W*0.085;
+  drawLogoIcon(ctx,pad,y,iconW);
+  drawWordmark(ctx,pad+iconW+W*0.03,y+iconW*0.86,W*0.052);
+
+  // badge pill (top-right)
+  if(state.badge.trim()){
+    ctx.font=`800 ${W*0.024}px Montserrat`;
+    const bw=ctx.measureText(state.badge.toUpperCase()).width+W*0.05;
+    const bh=W*0.05, bx=W-pad-bw, by=y+iconW*0.05;
+    roundRectPath(ctx,bx,by,bw,bh,bh/2); ctx.fillStyle=t.accent; ctx.fill();
+    ctx.fillStyle=pickInk(t.accent); ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(state.badge.toUpperCase(),bx+bw/2,by+bh/2+ (W*0.001));
+    ctx.textAlign='left';
+  }
+
+  y += iconW*1.35;
+
+  /* --- headline block (height-aware so it never crowds the list) --- */
+  const hlBase=Math.min(W*0.135, H*0.17);
+  const hlSize=fitText(ctx,state.headline.toUpperCase(),W-pad*2-W*0.032,hlBase,W*0.05,'400','Anton');
+  ctx.font=`400 ${hlSize}px Anton`;
+  ctx.textBaseline='alphabetic'; ctx.textAlign='left';
+  y += hlSize*0.92;
+  // accent tick before headline
+  ctx.fillStyle=t.accent; ctx.fillRect(pad,y-hlSize*0.72,W*0.014,hlSize*0.72);
+  ctx.fillStyle=t.headline;
+  ctx.fillText(state.headline.toUpperCase(),pad+W*0.032,y);
+
+  // subheadline
+  if(state.subheadline.trim()){
+    y += hlSize*0.26;
+    const ssBase=Math.min(W*0.038, H*0.05);
+    const ss=fitText(ctx,state.subheadline,W-pad*2,ssBase,W*0.018,'600','Montserrat');
+    ctx.font=`600 ${ss}px Montserrat`; ctx.fillStyle=t.muted;
+    y += ss;
+    ctx.fillText(state.subheadline,pad,y);
+  }
+
+  y += Math.min(H*0.028, W*0.024);
+
+  /* --- footer reservation --- */
+  const footH = Math.min(Math.max(W*0.07, 58), H*0.16);
+  const listTop = y;
+  const listBottom = H - pad - footH - H*0.012;
+  const items=state.items.filter(it=>(it.model||'').trim()!=='').slice(0,8);
+  const n=Math.max(items.length,1);
+  const gap=Math.max(6, Math.min(H*0.012, W*0.012));
+  // fit strictly inside the list area (never overlaps footer), capped so few items don't balloon
+  let rowH=(listBottom-listTop-gap*(n-1))/n;
+  rowH=Math.min(rowH, H*0.12, W*0.16);
+
+  // draw items
+  let iy=listTop;
+  ctx.textBaseline='middle';
+  for(const it of items){
+    // card
+    roundRectPath(ctx,pad,iy,W-pad*2,rowH,rowH*0.20);
+    ctx.fillStyle=t.card; ctx.fill();
+    ctx.lineWidth=Math.max(1,W*0.0016); ctx.strokeStyle=t.cardLine; ctx.stroke();
+
+    const cx=pad+rowH*0.28;
+    // model
+    const modelSize=Math.min(rowH*0.34,W*0.040);
+    const mF=fitText(ctx,it.model,W*0.52,modelSize,W*0.02,'800','Montserrat');
+    ctx.font=`800 ${mF}px Montserrat`; ctx.fillStyle=t.text; ctx.textAlign='left';
+    ctx.fillText(it.model, cx, iy+rowH*0.36);
+    // spec + grade line
+    const sub=[it.spec,it.grade].filter(Boolean).join('  •  ');
+    ctx.font=`600 ${rowH*0.20}px Montserrat`; ctx.fillStyle=t.muted;
+    ctx.fillText(sub, cx, iy+rowH*0.70);
+
+    // price pill (right)
+    if((it.price||'').trim()){
+      const priceTxt=state.currency+it.price;
+      ctx.font=`900 ${rowH*0.34}px Montserrat`;
+      const pw=ctx.measureText(priceTxt).width+rowH*0.5;
+      const ph=rowH*0.56, px=W-pad-rowH*0.28-pw, py=iy+(rowH-ph)/2;
+      roundRectPath(ctx,px,py,pw,ph,ph*0.28); ctx.fillStyle=t.priceBg; ctx.fill();
+      ctx.fillStyle=t.priceText; ctx.textAlign='center';
+      ctx.fillText(priceTxt, px+pw/2, py+ph/2+ph*0.02);
+      // qty above/below price
+      if((it.qty||'').trim()){
+        ctx.font=`700 ${rowH*0.17}px Montserrat`; ctx.fillStyle=t.muted; ctx.textAlign='right';
+        ctx.fillText(it.qty+' pcs', px-rowH*0.22, iy+rowH*0.5);
+      }
+      ctx.textAlign='left';
+    } else if((it.qty||'').trim()){
+      ctx.font=`700 ${rowH*0.22}px Montserrat`; ctx.fillStyle=t.muted; ctx.textAlign='right';
+      ctx.fillText(it.qty+' pcs', W-pad-rowH*0.28, iy+rowH*0.5); ctx.textAlign='left';
+    }
+    iy += rowH+gap;
+  }
+
+  /* --- footer bar --- */
+  const fY=H-pad-footH+H*0.012;
+  roundRectPath(ctx,pad,fY,W-pad*2,footH-H*0.012,footH*0.16);
+  const fg=ctx.createLinearGradient(pad,fY,W-pad,fY);
+  fg.addColorStop(0,t.accent); fg.addColorStop(1,shade(t.accent,-18));
+  ctx.fillStyle=fg; ctx.fill();
+
+  const ink=pickInk(t.accent);
+  const fcy=fY+(footH-H*0.012)/2;
+  const contacts=[
+    {ic:'wa', tx:state.whatsapp},
+    {ic:'em', tx:state.email},
+    {ic:'wb', tx:state.website},
+  ].filter(o2=>o2.tx.trim());
+  const fpad=footH*0.30;
+  let fx=pad+fpad;
+  ctx.textBaseline='middle';
+  const cfs=Math.min(W*0.026, (W-pad*2-fpad*2)/ (contacts.reduce((a,c)=>a+c.tx.length,0)*0.60+contacts.length*4));
+  for(const cta of contacts){
+    drawContactIcon(ctx,cta.ic,fx,fcy,cfs*1.15,ink);
+    fx+=cfs*1.5;
+    ctx.font=`700 ${cfs}px Montserrat`; ctx.fillStyle=ink; ctx.textAlign='left';
+    ctx.fillText(cta.tx,fx,fcy+cfs*0.05);
+    fx+=ctx.measureText(cta.tx).width+cfs*1.5;
+  }
+  // note (right)
+  if(state.note.trim()){
+    ctx.font=`800 ${cfs*0.9}px Montserrat`; ctx.textAlign='right';
+    ctx.fillStyle=hexA(ink,0.9);
+    ctx.fillText(state.note.toUpperCase(),W-pad-fpad,fcy);
+  }
+  ctx.textAlign='left'; ctx.textBaseline='alphabetic';
+}
+
+/* contact glyphs */
+function drawContactIcon(c,type,x,y,s,color){
+  c.save(); c.translate(x,y); c.strokeStyle=color; c.fillStyle=color;
+  c.lineWidth=s*0.12; c.lineJoin='round'; c.lineCap='round';
+  if(type==='wa'){
+    c.beginPath(); c.arc(0,0,s*0.5,0,Math.PI*2); c.stroke();
+    c.beginPath(); c.arc(0,0,s*0.24,Math.PI*0.15,Math.PI*0.9); c.stroke();
+  }else if(type==='em'){
+    c.strokeRect(-s*0.55,-s*0.38,s*1.1,s*0.76);
+    c.beginPath(); c.moveTo(-s*0.55,-s*0.38); c.lineTo(0,s*0.06); c.lineTo(s*0.55,-s*0.38); c.stroke();
+  }else{
+    c.beginPath(); c.arc(0,0,s*0.5,0,Math.PI*2); c.stroke();
+    c.beginPath(); c.ellipse(0,0,s*0.22,s*0.5,0,0,Math.PI*2); c.stroke();
+    c.beginPath(); c.moveTo(-s*0.5,0); c.lineTo(s*0.5,0); c.stroke();
+  }
+  c.restore();
+}
+
+/* colour utils */
+function hexA(hex,a){ const c=hx(hex); return `rgba(${c.r},${c.g},${c.b},${a})`; }
+function hx(hex){ hex=hex.replace('#',''); if(hex.length===3)hex=hex.split('').map(x=>x+x).join(''); return {r:parseInt(hex.slice(0,2),16),g:parseInt(hex.slice(2,4),16),b:parseInt(hex.slice(4,6),16)}; }
+function shade(hex,p){ const c=hx(hex); const f=v=>Math.max(0,Math.min(255,Math.round(v+ (p/100)*255))); return `rgb(${f(c.r)},${f(c.g)},${f(c.b)})`; }
+function pickInk(hex){ const c=hx(hex); const l=(c.r*299+c.g*587+c.b*114)/1000; return l>150?'#0a1024':'#ffffff'; }
+
+/* ============ UI wiring ============ */
+function el(t,c,txt){ const e=document.createElement(t); if(c)e.className=c; if(txt!=null)e.textContent=txt; return e; }
+
+function buildOrient(){
+  const box=document.getElementById('orient'); box.innerHTML='';
+  for(const [k,v] of Object.entries(ORIENTATIONS)){
+    const b=el('button','chip'+(state.orientation===k?' active':''),v.label);
+    b.onclick=()=>{ state.orientation=k; buildOrient(); render(); };
+    box.appendChild(b);
+  }
+}
+function buildThemes(){
+  const box=document.getElementById('themes'); box.innerHTML='';
+  for(const [k,v] of Object.entries(THEMES)){
+    const d=el('div','sw'+(state.theme===k?' active':''));
+    d.style.background=`linear-gradient(135deg,${v.bg[0]},${v.bg[1]})`;
+    const dot=el('div'); dot.style.cssText=`position:absolute;top:6px;right:6px;width:12px;height:12px;border-radius:50%;background:${v.accent};border:1.5px solid rgba(255,255,255,.6)`;
+    d.appendChild(dot); d.appendChild(el('span',null,v.name));
+    d.onclick=()=>{ state.theme=k; buildThemes(); render(); };
+    box.appendChild(d);
+  }
+}
+function buildPresets(){
+  const box=document.getElementById('presets'); box.innerHTML='';
+  PRESETS.forEach(p=>{
+    const b=el('button','chip',p.h);
+    b.onclick=()=>{ state.headline=p.h; state.subheadline=p.s; state.badge=p.b;
+      document.getElementById('headline').value=p.h;
+      document.getElementById('subheadline').value=p.s;
+      document.getElementById('badge').value=p.b; render(); };
+    box.appendChild(b);
+  });
+}
+function buildItems(){
+  const box=document.getElementById('items'); box.innerHTML='';
+  state.items.forEach((it,i)=>{
+    const wrap=el('div','item');
+    const del=el('button','del','×'); del.title='Remove';
+    del.onclick=()=>{ state.items.splice(i,1); buildItems(); render(); };
+    wrap.appendChild(del);
+    const mk=(ph,key,cls)=>{ const inp=el('input'); inp.type='text'; inp.placeholder=ph; inp.value=it[key]||'';
+      if(cls)inp.className=cls; inp.style.marginBottom='6px';
+      inp.oninput=()=>{ it[key]=inp.value; render(); }; return inp; };
+    wrap.appendChild(mk('Device model (e.g. iPhone 13 Pro)','model'));
+    const gr=el('div','grade-row');
+    gr.appendChild(mk('Storage','spec'));
+    gr.appendChild(mk('Grade','grade'));
+    gr.appendChild(mk('Qty','qty'));
+    wrap.appendChild(gr);
+    wrap.appendChild(mk('Price (numbers only)','price'));
+    box.appendChild(wrap);
+  });
+}
+document.getElementById('addItem').onclick=()=>{
+  if(state.items.length>=8){ toast('Max 8 lines for a clean layout'); return; }
+  state.items.push({model:'',spec:'',grade:'Grade A',qty:'',price:''});
+  buildItems(); render();
+};
+
+// bind simple text fields
+[['headline','headline'],['subheadline','subheadline'],['badge','badge'],['whatsapp','whatsapp'],
+ ['email','email'],['website','website'],['currency','currency'],['note','note']].forEach(([id,key])=>{
+  const inp=document.getElementById(id);
+  inp.value=state[key];
+  inp.oninput=()=>{ state[key]=inp.value; render(); };
+});
+
+/* ============ export ============ */
+function toast(msg,ok){ const t=document.getElementById('toast'); t.textContent=msg; t.style.borderColor= ok?'#22c55e':'var(--accent)'; t.classList.add('show'); clearTimeout(t._t); t._t=setTimeout(()=>t.classList.remove('show'),1900); }
+
+function filename(ext){
+  const h=(state.headline||'stock').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
+  const d=new Date().toISOString().slice(0,10);
+  return `repocket-${h||'stock'}-${state.orientation}-${d}.${ext}`;
+}
+function toBlob(type,q){ return new Promise(res=>canvas.toBlob(res,type,q)); }
+
+document.getElementById('dlJpg').onclick=async()=>{
+  // JPEG has no alpha; flatten onto white via a temp canvas to be safe (bg already opaque, but guarantee)
+  const b=await toBlob('image/jpeg',0.95);
+  downloadBlob(b,filename('jpg')); toast('JPG downloaded',true);
+};
+document.getElementById('dlPng').onclick=async()=>{
+  const b=await toBlob('image/png');
+  downloadBlob(b,filename('png')); toast('PNG downloaded',true);
+};
+function downloadBlob(b,name){
+  const url=URL.createObjectURL(b); const a=document.createElement('a');
+  a.href=url; a.download=name; document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),1500);
+}
+
+document.getElementById('copyBtn').onclick=async()=>{
+  try{
+    // Clipboard image write is most reliable as PNG across browsers
+    const b=await toBlob('image/png');
+    if(navigator.clipboard && window.ClipboardItem){
+      await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
+      toast('Image copied — paste to share!',true);
+    }else{ throw new Error('no clipboard'); }
+  }catch(e){
+    // fallback: download
+    const b=await toBlob('image/jpeg',0.95);
+    downloadBlob(b,filename('jpg'));
+    toast('Copy unavailable — downloaded instead');
+  }
+};
+
+/* ============ boot ============ */
+function boot(){
+  buildOrient(); buildThemes(); buildPresets(); buildItems();
+  render();
+}
+if(document.fonts && document.fonts.ready){
+  Promise.race([document.fonts.ready, new Promise(r=>setTimeout(r,1500))]).then(()=>{ boot(); setTimeout(render,300); });
+}else{ boot(); }
+</script>
+</body>
+</html>
