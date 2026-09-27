@@ -1,0 +1,31 @@
+# Render blueprint: New → Blueprint → pick this repo. Fill in the secrets when prompted.
+# Needs a paid instance type (Starter) because the SQLite database lives on a persistent disk.
+services:
+  - type: web
+    name: repocket-trade-desk
+    runtime: docker
+    plan: starter
+    healthCheckPath: /healthz
+    disk:
+      name: tradedesk-data
+      mountPath: /data
+      sizeGB: 1
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: WHATSAPP_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_APP_SECRET
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        generateValue: true
+      - key: DASHBOARD_PASSWORD
+        generateValue: true
+      - key: OWNER_WHATSAPP
+        sync: false
+      - key: MODE
+        value: approve
+      - key: DATABASE_PATH
+        value: /data/tradedesk.db

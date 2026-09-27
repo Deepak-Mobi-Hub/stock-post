@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>RePocket Trade Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0b1020; --panel:#141b36; --panel2:#1b2547; --line:#26325f; --text:#eaf0ff; --muted:#94a3c8;
+    --accent:#2f6bff; --accent-soft:rgba(47,107,255,.15); --good:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+    --bubble-in:#1b2547; --bubble-out:#1d4ed8; --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root{ --bg:#eef2fb; --panel:#ffffff; --panel2:#f4f7ff; --line:#dbe3f5; --text:#0d1428; --muted:#586089;
+      --accent-soft:rgba(47,107,255,.10); --bubble-in:#eef2fb; --bubble-out:#2f6bff; }
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0}
+  body{font-family:Montserrat,system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:var(--bg);color:var(--text);
+    font-size:14px;-webkit-font-smoothing:antialiased}
+  header{display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid var(--line);position:sticky;top:0;
+    background:var(--bg);z-index:10;flex-wrap:wrap}
+  .brand{font-family:Anton,sans-serif;font-size:21px;letter-spacing:1px}
+  .brand b{color:var(--accent);font-weight:400}
+  .brand small{font-family:Montserrat;font-size:10px;letter-spacing:2.5px;color:var(--muted);margin-left:6px;font-weight:700}
+  .spacer{flex:1}
+  .pill{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--line);border-radius:999px;padding:4px 10px;
+    font-size:11.5px;font-weight:700;color:var(--muted);white-space:nowrap}
+  .pill.on{color:var(--good);border-color:rgba(34,197,94,.4)}
+  .pill.warn{color:var(--warn);border-color:rgba(245,158,11,.4)}
+  nav{display:flex;gap:4px;padding:8px 12px;border-bottom:1px solid var(--line);overflow-x:auto;position:sticky;top:57px;
+    background:var(--bg);z-index:9}
+  nav button{border:none;background:transparent;color:var(--muted);font:inherit;font-weight:700;padding:8px 12px;border-radius:10px;
+    cursor:pointer;white-space:nowrap}
+  nav button.active{background:var(--accent-soft);color:var(--text)}
+  nav .count{background:var(--accent);color:#fff;border-radius:999px;padding:1px 7px;font-size:11px;margin-left:4px}
+  main{padding:16px;max-width:1200px;margin:0 auto}
+  section{display:none} section.active{display:block}
+  h2{font-size:13px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin:22px 0 10px;font-weight:800}
+  h2:first-child{margin-top:4px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+  .tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:12px 14px}
+  .tile .n{font-size:24px;font-weight:800}
+  .tile .l{font-size:11.5px;color:var(--muted);font-weight:700;margin-top:2px}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);padding:14px;margin-bottom:10px}
+  .card .top{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .card .who{font-weight:800}
+  .muted{color:var(--muted)} .small{font-size:12px}
+  .badge{display:inline-block;border-radius:6px;padding:2px 7px;font-size:11px;font-weight:800;background:var(--panel2);
+    border:1px solid var(--line);color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
+  .badge.good{color:var(--good)} .badge.warn{color:var(--warn)} .badge.bad{color:var(--bad)} .badge.blue{color:var(--accent)}
+  textarea,input,select{width:100%;background:var(--panel2);border:1px solid var(--line);color:var(--text);border-radius:10px;
+    padding:9px 11px;font:inherit;font-weight:600;outline:none}
+  textarea{min-height:80px;resize:vertical}
+  input:focus,textarea:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-soft)}
+  label{display:block;font-size:12px;font-weight:700;color:var(--muted);margin:10px 0 4px}
+  .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+  .row > *{flex:1;min-width:120px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:10px;padding:9px 14px;
+    font:inherit;font-weight:800;cursor:pointer;background:var(--accent);color:#fff;white-space:nowrap;flex:none!important;min-width:0!important}
+  .btn.ghost{background:transparent;color:var(--text);border:1px solid var(--line)}
+  .btn.danger{background:transparent;color:var(--bad);border:1px solid rgba(239,68,68,.4)}
+  .btn.small{padding:6px 10px;font-size:12px}
+  .btn:disabled{opacity:.5;cursor:not-allowed}
+  .chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+  .chip{border:1px solid var(--line);background:var(--panel);color:var(--text);border-radius:999px;padding:6px 12px;font:inherit;
+    font-size:12.5px;font-weight:700;cursor:pointer}
+  .chip.active{background:var(--accent);border-color:var(--accent);color:#fff}
+  table{width:100%;border-collapse:collapse;font-size:13px}
+  th{text-align:left;font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;padding:8px;border-bottom:1px solid var(--line);white-space:nowrap}
+  td{padding:8px;border-bottom:1px solid var(--line);vertical-align:top}
+  .tablewrap{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:var(--radius)}
+  .num{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .empty{padding:24px;text-align:center;color:var(--muted);background:var(--panel);border:1px dashed var(--line);border-radius:var(--radius)}
+  .contact{cursor:pointer}
+  .contact:hover{border-color:var(--accent)}
+  .score{height:5px;background:var(--panel2);border-radius:99px;overflow:hidden;margin-top:8px}
+  .score i{display:block;height:100%;background:var(--accent)}
+  .facts{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:6px}
+  .fact{background:var(--panel2);border-radius:10px;padding:8px 10px}
+  .fact b{display:block;font-size:10.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px}
+  .chat{display:flex;flex-direction:column;gap:6px;max-height:460px;overflow-y:auto;padding:10px;background:var(--panel2);
+    border-radius:var(--radius);border:1px solid var(--line)}
+  .bubble{max-width:82%;padding:8px 11px;border-radius:12px;white-space:pre-wrap;word-wrap:break-word;line-height:1.4}
+  .bubble.in{background:var(--bubble-in);border:1px solid var(--line);align-self:flex-start}
+  .bubble.out{background:var(--bubble-out);color:#fff;align-self:flex-end}
+  .bubble.note{align-self:center;background:transparent;color:var(--muted);font-size:12px;font-style:italic;border:1px dashed var(--line)}
+  .bubble .meta{display:block;font-size:10.5px;opacity:.7;margin-top:3px}
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media (max-width:860px){ .split{grid-template-columns:1fr} }
+  .drawer{position:fixed;inset:0;background:rgba(0,0,0,.5);display:none;z-index:30;justify-content:flex-end}
+  .drawer.open{display:flex}
+  .drawer .panel{width:min(760px,100%);height:100%;overflow-y:auto;background:var(--bg);padding:16px;border-left:1px solid var(--line)}
+  .toast{position:fixed;left:50%;bottom:20px;transform:translateX(-50%);background:#0d1428;color:#fff;border:1px solid var(--accent);
+    padding:10px 16px;border-radius:12px;font-weight:700;z-index:50;display:none;max-width:90vw}
+  .toast.err{border-color:var(--bad)}
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.55);display:none;z-index:40;align-items:center;justify-content:center;padding:16px}
+  .modal.open{display:flex}
+  .modal .panel{background:var(--bg);border:1px solid var(--line);border-radius:var(--radius);padding:16px;width:min(620px,100%);max-height:90vh;overflow:auto}
+  .hint{font-size:12px;color:var(--muted);line-height:1.5}
+  pre{white-space:pre-wrap;background:var(--panel2);padding:10px;border-radius:10px;font-size:12.5px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand"><b>RE</b>POCKET<small>TRADE DESK</small></div>
+  <div class="spacer"></div>
+  <span class="pill" id="modePill">…</span>
+  <span class="pill" id="waPill">…</span>
+</header>
+<nav id="nav">
+  <button data-tab="today" class="active">Today <span class="count" id="navDrafts" hidden></span></button>
+  <button data-tab="deals">Deals</button>
+  <button data-tab="pipeline">Pipeline</button>
+  <button data-tab="stock">Stock</button>
+  <button data-tab="demand">Demand</button>
+  <button data-tab="outreach">Outreach</button>
+  <button data-tab="simulator">Simulator</button>
+  <button data-tab="settings">Settings</button>
+</nav>
+
+<main>
+  <!-- TODAY -->
+  <section id="today" class="active">
+    <div class="grid" id="kpis"></div>
+    <h2>Waiting for you</h2>
+    <div id="draftList"></div>
+    <h2>Needs your attention</h2>
+    <div id="escList"></div>
+  </section>
+
+  <!-- DEALS -->
+  <section id="deals">
+    <div class="hint" id="econHint"></div>
+    <div class="chips" id="dealFilter" style="margin-top:10px"></div>
+    <div class="row" style="margin-bottom:10px">
+      <span class="hint">Tick stock lines to build a buyer-facing blast (our sell prices, no supplier names).</span>
+      <button class="btn small" id="blastBtn">Create stock blast</button>
+    </div>
+    <div id="dealTable"></div>
+  </section>
+
+  <!-- PIPELINE -->
+  <section id="pipeline">
+    <div class="chips" id="stageFilter"></div>
+    <div class="row" style="margin-bottom:10px">
+      <input id="contactSearch" placeholder="Search name, company or number" />
+      <select id="typeFilter" style="max-width:170px">
+        <option value="">All types</option><option value="supplier">Suppliers</option>
+        <option value="buyer">Buyers</option><option value="both">Both</option><option value="unknown">Unknown</option>
+      </select>
+      <button class="btn small ghost" id="addContactBtn">+ Contact</button>
+    </div>
+    <div id="contactList"></div>
+  </section>
+
+  <!-- STOCK -->
+  <section id="stock">
+    <div class="card">
+      <div class="row">
+        <input type="file" id="stockFile" accept=".xlsx,.csv,.pdf,.png,.jpg,.jpeg" />
+        <button class="btn small" id="stockUploadBtn">Upload list (our own / unassigned)</button>
+      </div>
+      <p class="hint">Supplier lists sent on WhatsApp are read automatically. Use this for your own stock or lists that
+        arrived by email; to attach a list to a supplier, upload it from their page in Pipeline.</p>
+    </div>
+    <div class="row" style="margin-bottom:10px">
+      <input id="stockSearch" placeholder="Filter by model" />
+      <button class="btn small ghost" id="addOfferBtn">+ Stock line</button>
+    </div>
+    <div id="stockTable"></div>
+  </section>
+
+  <!-- DEMAND -->
+  <section id="demand">
+    <div class="row" style="margin-bottom:10px">
+      <span class="hint">What buyers are looking for. The assistant fills this from conversations; you can add lines too.</span>
+      <button class="btn small ghost" id="addReqBtn">+ Buyer requirement</button>
+    </div>
+    <div id="demandTable"></div>
+  </section>
+
+  <!-- OUTREACH -->
+  <section id="outreach">
+    <div class="card">
+      <label>Prospect CSV</label>
+      <input type="file" id="csvFile" accept=".csv" />
+      <div class="row">
+        <div><label>Campaign name</label><input id="campaign" value="EBM Portugal 2026" /></div>
+      </div>
+      <label style="display:flex;gap:8px;align-items:flex-start;font-weight:600;color:var(--text)">
+        <input type="checkbox" id="consent" style="width:auto;margin-top:2px" />
+        These people agreed to hear from us on WhatsApp (shared their number for it, met us, or opted in).
+      </label>
+      <p class="hint">Columns: <b>phone</b> (international, e.g. +49…), name, company, type (supplier/buyer), country, notes,
+        consent (yes/no per row). Only people with consent are queued. The first message is your approved WhatsApp
+        template; up to the daily limit go out on weekdays within the send window. Replies are handled like any conversation.</p>
+      <button class="btn" id="importBtn">Import &amp; queue</button>
+      <div id="importResult" class="hint" style="margin-top:8px"></div>
+    </div>
+    <h2>Queue</h2>
+    <div id="outreachTable"></div>
+  </section>
+
+  <!-- SIMULATOR -->
+  <section id="simulator">
+    <p class="hint">Test the assistant before it talks to real people. You play the prospect; nothing is sent on WhatsApp
+      and nothing touches your real data. Every reply is shown as if you'd approved it.</p>
+    <div class="split">
+      <div>
+        <div class="row">
+          <div><label>Prospect name</label><input id="simName" value="Tom" /></div>
+          <div><label>Prospect number</label><input id="simPhone" value="+447000000001" /></div>
+        </div>
+        <label>Conversation</label>
+        <div class="chat" id="simChat"><div class="bubble note">Say hello as a supplier or buyer…</div></div>
+        <div class="row" style="margin-top:8px">
+          <textarea id="simText" placeholder="e.g. Hi Deepak, we're an ITAD in Rotterdam. What would you pay for 200 Latitude 5420s, grade B?" style="min-height:60px"></textarea>
+        </div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn" id="simSend">Send as prospect</button>
+          <button class="btn ghost" id="simReset">Start over</button>
+        </div>
+      </div>
+      <div>
+        <label>What the assistant did</label>
+        <div id="simOutcome" class="card hint">Nothing yet.</div>
+        <label>What it learned</label>
+        <div id="simFacts"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section id="settings">
+    <div class="card">
+      <label>Reply mode</label>
+      <div class="chips" id="modeChips"></div>
+      <p class="hint"><b>Approve</b>: every reply is a draft. You get it on WhatsApp and send it with “send 12”, or edit it
+        here. <b>Auto</b>: routine relationship and qualifying replies go out on their own; anything about prices, deals,
+        meetings, or anything the assistant isn't sure about still comes to you first. Your edits teach it your style.</p>
+    </div>
+    <div class="card">
+      <div class="row">
+        <div><label>Target margin %</label><input id="setMargin" type="number" step="0.5" /></div>
+        <div><label>Cost per unit (base ccy)</label><input id="setCpu" type="number" step="0.5" /></div>
+        <div><label>Fees % of sale</label><input id="setPct" type="number" step="0.1" /></div>
+        <div><label>Base currency</label><input id="setBase" maxlength="3" /></div>
+      </div>
+      <label>FX to base currency (one per line, e.g. GBP=1.17)</label>
+      <textarea id="setFx" style="min-height:70px"></textarea>
+      <p class="hint">Margin = (buyer price − supplier price − cost per unit − fees) ÷ buyer price. Max bid is the highest
+        supplier price that still clears your target margin.</p>
+      <button class="btn" id="saveSettings">Save</button>
+    </div>
+    <div class="card">
+      <div class="row">
+        <button class="btn ghost" id="runJobs">Run follow-ups &amp; outreach now</button>
+        <button class="btn ghost" id="showDigest">Preview daily digest</button>
+      </div>
+      <pre id="digestOut" hidden></pre>
+      <p class="hint" id="statusInfo"></p>
+    </div>
+  </section>
+</main>
+
+<!-- contact drawer -->
+<div class="drawer" id="drawer"><div class="panel" id="drawerPanel"></div></div>
+<!-- generic modal -->
+<div class="modal" id="modal"><div class="panel" id="modalPanel"></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ---------------------------------------------------------------- helpers */
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (v) => String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let ECON = {base_currency: 'EUR', target_margin_pct: 8};
+const sym = () => ({EUR:'€', GBP:'£', USD:'$'}[ECON.base_currency] || ECON.base_currency + ' ');
+const money = (n) => n == null ? '—' : sym() + Number(n).toLocaleString(undefined, {maximumFractionDigits: Math.abs(n) >= 100 ? 0 : 2});
+const when = (iso) => iso ? new Date(iso).toLocaleString(undefined, {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'}) : '';
+const label = (r) => r.name && r.company ? `${r.name} (${r.company})` : (r.name || r.company || (r.wa_id ? '+' + r.wa_id : '—'));
+
+async function api(path, opts = {}) {
+  const init = {...opts, headers: {...(opts.headers || {})}};
+  if (opts.json !== undefined) { init.body = JSON.stringify(opts.json); init.headers['Content-Type'] = 'application/json'; }
+  const r = await fetch(path, init);
+  const data = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(data.detail || `Error ${r.status}`);
+  return data;
+}
+function toast(msg, err) {
+  const t = $('#toast'); t.textContent = msg; t.className = 'toast' + (err ? ' err' : ''); t.style.display = 'block';
+  clearTimeout(t._t); t._t = setTimeout(() => t.style.display = 'none', 3200);
+}
+async function run(fn, okMsg) { try { const r = await fn(); if (okMsg) toast(okMsg); return r; } catch (e) { toast(e.message, true); } }
+function modal(html) { $('#modalPanel').innerHTML = html; $('#modal').classList.add('open'); }
+$('#modal').onclick = (e) => { if (e.target.id === 'modal') $('#modal').classList.remove('open'); };
+$('#drawer').onclick = (e) => { if (e.target.id === 'drawer') $('#drawer').classList.remove('open'); };
+
+/* ---------------------------------------------------------------- tabs */
+const loaders = {};
+document.querySelectorAll('nav button').forEach(b => b.onclick = () => showTab(b.dataset.tab));
+function showTab(tab) {
+  document.querySelectorAll('nav button').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('main section').forEach(s => s.classList.toggle('active', s.id === tab));
+  try { localStorage.setItem('td-tab', tab); } catch (e) {}
+  loaders[tab] && loaders[tab]();
+}
+
+/* ---------------------------------------------------------------- today */
+async function loadSummary() {
+  const s = await api('/api/summary');
+  ECON = s.economics;
+  $('#modePill').textContent = s.mode === 'auto' ? 'Auto replies' : 'Approve every reply';
+  $('#modePill').className = 'pill ' + (s.mode === 'auto' ? 'warn' : 'on');
+  $('#waPill').textContent = s.whatsapp_live ? 'WhatsApp live' : 'WhatsApp not connected (dry run)';
+  $('#waPill').className = 'pill ' + (s.whatsapp_live ? 'on' : 'warn');
+  const nd = $('#navDrafts'); nd.hidden = !s.drafts; nd.textContent = s.drafts;
+  const st = s.by_stage;
+  const tiles = [
+    [s.drafts, 'Drafts to approve'], [s.escalations, 'Need you'],
+    [s.opportunities_good, `Deals ≥ ${ECON.target_margin_pct}% margin`], [money(s.potential_profit), 'Potential profit'],
+    [s.opportunities_bid, 'Lots you can bid on'], [s.offers, 'Stock lines'], [s.requirements, 'Buyer requirements'],
+    [(st.engaged || 0) + (st.qualified || 0) + (st.trading || 0), 'Active conversations'],
+    [st.qualified || 0, 'Qualified'], [st.trading || 0, 'Trading'], [s.outreach_queued, 'Outreach queued'],
+  ];
+  $('#kpis').innerHTML = tiles.map(([n, l]) => `<div class="tile"><div class="n">${esc(n)}</div><div class="l">${esc(l)}</div></div>`).join('');
+  return s;
+}
+async function loadDrafts() {
+  const rows = await api('/api/drafts');
+  $('#draftList').innerHTML = rows.length ? rows.map(d => `
+    <div class="card" data-id="${d.id}">
+      <div class="top"><span class="who">${esc(label(d))}</span><span class="badge">${esc(d.type)}</span>
+        <span class="badge ${d.kind === 'reply' ? 'blue' : 'warn'}">${esc(d.kind)}</span>
+        <span class="muted small">#${d.id} · ${esc(d.reason)}</span></div>
+      <textarea style="margin-top:8px" ${d.kind === 'template' ? 'readonly' : ''}>${esc(d.body)}</textarea>
+      ${d.within_window ? '' : '<p class="hint">⚠️ Over 24h since they last wrote: WhatsApp will refuse free text. Use the follow-up template from their page.</p>'}
+      <div class="row" style="margin-top:8px">
+        <button class="btn small" data-act="send">Send</button>
+        <button class="btn small ghost" data-act="open" data-cid="${d.contact_id}">Open conversation</button>
+        <button class="btn small danger" data-act="discard">Discard</button>
+      </div>
+    </div>`).join('') : '<div class="empty">Nothing waiting. 🎉</div>';
+  $('#draftList').querySelectorAll('.card').forEach(card => {
+    const id = card.dataset.id;
+    card.querySelector('[data-act=send]').onclick = () => run(async () => {
+      await api(`/api/drafts/${id}/send`, {method: 'POST', json: {body: card.querySelector('textarea').value}});
+      loadToday();
+    }, 'Sent');
+    card.querySelector('[data-act=discard]').onclick = () => run(async () => {
+      await api(`/api/drafts/${id}/discard`, {method: 'POST'}); loadToday();
+    }, 'Discarded');
+    card.querySelector('[data-act=open]').onclick = (e) => openContact(e.target.dataset.cid);
+  });
+}
+async function loadEscalations() {
+  const rows = await api('/api/escalations');
+  $('#escList').innerHTML = rows.length ? rows.map(e => `
+    <div class="card" data-id="${e.id}">
+      <div class="top"><span class="who">${esc(label(e))}</span><span class="muted small">${when(e.created_at)}</span></div>
+      <div style="margin-top:6px">${esc(e.reason)}</div>
+      <div class="row" style="margin-top:8px">
+        ${e.contact_id ? `<button class="btn small ghost" data-open="${e.contact_id}">Open conversation</button>` : ''}
+        <button class="btn small" data-done>Done</button>
+      </div>
+    </div>`).join('') : '<div class="empty">All clear.</div>';
+  $('#escList').querySelectorAll('.card').forEach(card => {
+    card.querySelector('[data-done]').onclick = () => run(async () => {
+      await api(`/api/escalations/${card.dataset.id}/done`, {method: 'POST'}); loadToday();
+    });
+    const o = card.querySelector('[data-open]'); if (o) o.onclick = () => openContact(o.dataset.open);
+  });
+}
+loaders.today = () => run(() => Promise.all([loadSummary(), loadDrafts(), loadEscalations()]));
+const loadToday = loaders.today;
+
+/* ---------------------------------------------------------------- deals */
+let dealFilter = 'good,needs_buy_price';
+const DEAL_FILTERS = [['good,needs_buy_price', 'Worth doing'], ['good', `≥ target margin`], ['needs_buy_price', 'Bid on these'],
+  ['thin', 'Thin margin'], ['needs_sell_price,needs_both', 'Missing prices'], ['', 'All matches']];
+const STATUS = {good: ['good', 'Good'], needs_buy_price: ['blue', 'Bid'], thin: ['warn', 'Thin'], negative: ['bad', 'Loss'],
+  needs_sell_price: ['warn', 'Ask buyer price'], needs_both: ['', 'No prices']};
+loaders.deals = () => run(async () => {
+  await loadSummary();
+  $('#econHint').textContent = `Target ${ECON.target_margin_pct}% margin · costs ${money(ECON.cost_per_unit)}/unit + ${ECON.cost_pct}% of sale · prices in ${ECON.base_currency}`;
+  $('#dealFilter').innerHTML = DEAL_FILTERS.map(([v, l]) => `<button class="chip ${v === dealFilter ? 'active' : ''}" data-v="${v}">${esc(l)}</button>`).join('');
+  $('#dealFilter').querySelectorAll('.chip').forEach(c => c.onclick = () => { dealFilter = c.dataset.v; loaders.deals(); });
+  const ops = await api('/api/opportunities?status=' + encodeURIComponent(dealFilter));
+  $('#dealTable').innerHTML = ops.length ? `<div class="tablewrap"><table>
+    <tr><th></th><th>Device</th><th>Supplier</th><th>Buyer</th><th class="num">Qty</th><th class="num">Buy</th>
+      <th class="num">Sell</th><th class="num">Margin</th><th class="num">Profit</th><th class="num">Max bid</th><th></th></tr>
+    ${ops.map(o => `<tr>
+      <td><input type="checkbox" class="blastPick" value="${o.offer_id}" style="width:auto"></td>
+      <td><b>${esc(o.model)}</b> ${o.storage_gb ? esc(o.storage_gb + 'GB') : ''} <span class="badge">${esc(o.grade || '?')}</span>
+        ${o.near_match ? '<div class="small" style="color:var(--warn)">check spec/year</div>' : ''}
+        ${o.offer_spec || o.offer_notes ? `<div class="small muted">${esc([o.offer_spec, o.offer_notes].filter(Boolean).join(' · '))}</div>` : ''}
+        ${o.requirement_spec ? `<div class="small muted">wants: ${esc(o.requirement_spec)}</div>` : ''}</td>
+      <td class="contact" data-cid="${o.supplier_id || ''}">${esc(o.supplier)}</td>
+      <td class="contact" data-cid="${o.buyer_id || ''}">${esc(o.buyer)}</td>
+      <td class="num">${esc(o.qty ?? '—')}</td><td class="num">${money(o.buy_price)}</td><td class="num">${money(o.sell_price)}</td>
+      <td class="num">${o.margin_pct == null ? '—' : esc(o.margin_pct + '%')}</td><td class="num">${money(o.total_profit)}</td>
+      <td class="num">${money(o.max_bid)}</td>
+      <td><span class="badge ${STATUS[o.status][0]}">${STATUS[o.status][1]}</span></td></tr>`).join('')}
+  </table></div>` : '<div class="empty">No matches here yet. They appear as soon as a supplier\'s stock lines up with a buyer\'s requirement.</div>';
+  $('#dealTable').querySelectorAll('td.contact').forEach(td => td.onclick = () => td.dataset.cid && openContact(td.dataset.cid));
+});
+$('#blastBtn').onclick = () => {
+  const ids = [...new Set([...document.querySelectorAll('.blastPick:checked')].map(i => +i.value))];
+  openBlast(ids);
+};
+function openBlast(ids) {
+  if (!ids.length) return toast('Tick some stock lines first', true);
+  run(async () => {
+    const b = await api('/api/blast', {method: 'POST', json: {offer_ids: ids}});
+    modal(`<h2>Stock blast</h2><p class="hint">Our sell prices at target margin. No supplier names or buy prices.</p>
+      <textarea id="blastText" style="min-height:200px">${esc(b.text)}</textarea>
+      <div class="row" style="margin-top:8px"><button class="btn" id="copyBlast">Copy text</button>
+      <a class="btn ghost" href="${esc(b.studio_url)}" target="_blank" rel="noopener">Open in Stock Blast Studio</a></div>
+      ${b.note ? `<p class="hint">${esc(b.note)}</p>` : ''}`);
+    $('#copyBlast').onclick = () => navigator.clipboard.writeText($('#blastText').value).then(() => toast('Copied'));
+  });
+}
+
+/* ---------------------------------------------------------------- pipeline */
+let stageFilter = '';
+const STAGES = ['', 'engaged', 'qualified', 'trading', 'contacted', 'new', 'dormant', 'opted_out'];
+loaders.pipeline = () => run(async () => {
+  $('#stageFilter').innerHTML = STAGES.map(s => `<button class="chip ${s === stageFilter ? 'active' : ''}" data-v="${s}">${s ? esc(s.replace('_', ' ')) : 'All'}</button>`).join('');
+  $('#stageFilter').querySelectorAll('.chip').forEach(c => c.onclick = () => { stageFilter = c.dataset.v; loaders.pipeline(); });
+  const q = new URLSearchParams({stage: stageFilter, type: $('#typeFilter').value, q: $('#contactSearch').value});
+  const rows = await api('/api/contacts?' + q);
+  $('#contactList').innerHTML = rows.length ? rows.map(c => `
+    <div class="card contact" data-cid="${c.id}">
+      <div class="top"><span class="who">${esc(label(c))}</span><span class="badge">${esc(c.type)}</span>
+        <span class="badge blue">${esc(c.stage)}</span>
+        ${c.n_offers ? `<span class="badge good">${c.n_offers} stock</span>` : ''}
+        ${c.n_requirements ? `<span class="badge good">${c.n_requirements} wants</span>` : ''}
+        ${c.n_drafts ? '<span class="badge warn">draft</span>' : ''}
+        ${c.bot_paused ? '<span class="badge warn">paused</span>' : ''}
+        <span class="spacer"></span><span class="muted small">${when(c.last_inbound_at || c.updated_at)}</span></div>
+      ${c.last_message ? `<div class="muted small" style="margin-top:6px">${esc(c.last_message.slice(0, 160))}</div>` : ''}
+      <div class="score" title="Lead score ${c.score}"><i style="width:${c.score}%"></i></div>
+    </div>`).join('') : '<div class="empty">No contacts here yet.</div>';
+  $('#contactList').querySelectorAll('.contact').forEach(el => el.onclick = () => openContact(el.dataset.cid));
+});
+let searchT; $('#contactSearch').oninput = () => { clearTimeout(searchT); searchT = setTimeout(loaders.pipeline, 250); };
+$('#typeFilter').onchange = () => loaders.pipeline();
+$('#addContactBtn').onclick = () => {
+  modal(`<h2>New contact</h2>
+    <div class="row"><div><label>Name</label><input id="ncName"></div><div><label>Company</label><input id="ncCompany"></div></div>
+    <div class="row"><div><label>WhatsApp number</label><input id="ncPhone" placeholder="+44 7…"></div>
+      <div><label>Type</label><select id="ncType"><option value="">Unknown</option><option>supplier</option><option>buyer</option><option>both</option></select></div></div>
+    <div class="row"><div><label>Country</label><input id="ncCountry"></div></div>
+    <label>Notes (where you met, what they do)</label><textarea id="ncNotes"></textarea>
+    <label style="display:flex;gap:8px;font-weight:600;color:var(--text)"><input type="checkbox" id="ncConsent" style="width:auto"> Agreed to WhatsApp contact</label>
+    <button class="btn" id="ncSave" style="margin-top:10px">Save</button>`);
+  $('#ncSave').onclick = () => run(async () => {
+    const c = await api('/api/contacts', {method: 'POST', json: {name: $('#ncName').value, company: $('#ncCompany').value,
+      phone: $('#ncPhone').value, type: $('#ncType').value, country: $('#ncCountry').value, notes: $('#ncNotes').value,
+      consent: $('#ncConsent').checked}});
+    $('#modal').classList.remove('open'); loaders.pipeline(); openContact(c.id);
+  }, 'Saved');
+};
+
+async function openContact(cid) {
+  const d = await run(() => api('/api/contacts/' + cid)); if (!d) return;
+  const c = d.contact;
+  const facts = Object.entries(d.profile);
+  $('#drawerPanel').innerHTML = `
+    <div class="row"><h2 style="margin:0;flex:1">${esc(d.label)}</h2><button class="btn small ghost" id="closeDrawer">Close</button></div>
+    <p class="muted small">+${esc(c.wa_id)} ${c.email ? '· ' + esc(c.email) : ''} ${c.country ? '· ' + esc(c.country) : ''} · score ${c.score}</p>
+    <div class="row">
+      <div><label>Type</label><select id="cType">${['unknown','supplier','buyer','both'].map(t => `<option ${t === c.type ? 'selected' : ''}>${t}</option>`).join('')}</select></div>
+      <div><label>Stage</label><select id="cStage">${STAGES.filter(Boolean).concat(['new']).filter((v, i, a) => a.indexOf(v) === i).map(s => `<option ${s === c.stage ? 'selected' : ''}>${s}</option>`).join('')}</select></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn small ghost" id="cPause">${c.bot_paused ? '▶️ Resume assistant' : '⏸️ Pause assistant'}</button>
+      <button class="btn small ghost" id="cConsent">${c.consent ? '✅ WhatsApp consent' : 'Mark WhatsApp consent'}</button>
+      <button class="btn small danger" id="cOpt">${c.opted_out ? 'Undo opt-out' : 'Opt out'}</button>
+    </div>
+    <label>Your notes</label><textarea id="cNotes" style="min-height:50px">${esc(c.notes)}</textarea>
+    <h2>What we know</h2>
+    ${facts.length ? `<div class="facts">${facts.map(([k, v]) => `<div class="fact"><b>${esc(k.replace(/_/g, ' '))}</b>${esc(v)}</div>`).join('')}</div>` : '<p class="hint">Nothing yet. The assistant fills this in as you talk.</p>'}
+    <h2>Conversation</h2>
+    <div class="chat" id="cChat">${d.messages.map(bubble).join('') || '<div class="bubble note">No messages yet</div>'}</div>
+    ${d.drafts.map(dr => `<div class="card" style="margin-top:8px"><b>Draft #${dr.id}</b> <span class="muted small">${esc(dr.reason)}</span>
+      <textarea data-draft="${dr.id}">${esc(dr.body)}</textarea>
+      <div class="row" style="margin-top:6px"><button class="btn small" data-send="${dr.id}">Send</button>
+      <button class="btn small danger" data-discard="${dr.id}">Discard</button></div></div>`).join('')}
+    ${d.within_window ? `
+      <label>Write yourself (the assistant learns from your messages)</label>
+      <textarea id="cMsg" placeholder="Message ${esc(c.name || '')}…" style="min-height:60px"></textarea>
+      <button class="btn" id="cSend" style="margin-top:6px">Send</button>` : `
+      <p class="hint">It's been over 24h since they last wrote, so WhatsApp only allows an approved template.</p>
+      <div class="row"><button class="btn small ghost" id="cFollow">Send follow-up template</button>
+      <button class="btn small ghost" id="cIntro">Send intro template</button></div>`}
+    <h2>Stock &amp; requirements</h2>
+    <div class="row"><input type="file" id="cFile" accept=".xlsx,.csv,.pdf,.png,.jpg,.jpeg">
+      <select id="cKind" style="max-width:190px"><option value="auto">Auto</option><option value="offers">Their stock (they sell)</option>
+      <option value="requirements">Their wants (they buy)</option></select>
+      <button class="btn small" id="cUpload">Upload list</button></div>
+    ${lineTable(d.offers, 'offer')}${lineTable(d.requirements, 'req')}
+    <h2>Data</h2>
+    <p class="hint">Erasing deletes their conversation, stock, requirements and notes. Their number stays on the
+      do-not-contact list so they're never messaged again.</p>
+    <button class="btn small danger" id="cErase">Erase their data</button>`;
+  $('#drawer').classList.add('open');
+  const chat = $('#cChat'); chat.scrollTop = chat.scrollHeight;
+  const patch = (json, msg) => run(async () => { await api('/api/contacts/' + cid, {method: 'PATCH', json}); openContact(cid); }, msg);
+  $('#closeDrawer').onclick = () => $('#drawer').classList.remove('open');
+  $('#cType').onchange = (e) => patch({type: e.target.value}, 'Saved');
+  $('#cStage').onchange = (e) => patch({stage: e.target.value}, 'Saved');
+  $('#cPause').onclick = () => patch({bot_paused: c.bot_paused ? 0 : 1});
+  $('#cConsent').onclick = () => patch({consent: c.consent ? 0 : 1});
+  $('#cOpt').onclick = () => patch({opted_out: c.opted_out ? 0 : 1});
+  $('#cNotes').onchange = (e) => patch({notes: e.target.value}, 'Notes saved');
+  const send = $('#cSend'); if (send) send.onclick = () => run(async () => {
+    await api(`/api/contacts/${cid}/message`, {method: 'POST', json: {body: $('#cMsg').value}}); openContact(cid);
+  }, 'Sent');
+  const fol = $('#cFollow'); if (fol) fol.onclick = () => run(async () => { await api(`/api/contacts/${cid}/template`, {method: 'POST', json: {which: 'followup'}}); openContact(cid); }, 'Sent');
+  const intro = $('#cIntro'); if (intro) intro.onclick = () => run(async () => { await api(`/api/contacts/${cid}/template`, {method: 'POST', json: {which: 'intro'}}); openContact(cid); }, 'Sent');
+  document.querySelectorAll('[data-send]').forEach(b => b.onclick = () => run(async () => {
+    await api(`/api/drafts/${b.dataset.send}/send`, {method: 'POST', json: {body: document.querySelector(`[data-draft="${b.dataset.send}"]`).value}});
+    openContact(cid); loadSummary();
+  }, 'Sent'));
+  document.querySelectorAll('[data-discard]').forEach(b => b.onclick = () => run(async () => {
+    await api(`/api/drafts/${b.dataset.discard}/discard`, {method: 'POST'}); openContact(cid);
+  }, 'Discarded'));
+  $('#cErase').onclick = () => {
+    if (!confirm('Erase everything about this contact? This cannot be undone.')) return;
+    run(async () => { await api(`/api/contacts/${cid}/erase`, {method: 'POST'}); $('#drawer').classList.remove('open'); loaders.pipeline(); }, 'Erased');
+  };
+  $('#cUpload').onclick = () => uploadList($('#cFile'), cid, $('#cKind').value).then(() => openContact(cid));
+  bindLineActions($('#drawerPanel'), () => openContact(cid));
+}
+function bubble(m) {
+  const cls = m.author === 'system' ? 'note' : (m.direction === 'in' ? 'in' : 'out');
+  const who = m.direction === 'in' ? '' : ({bot: 'assistant', owner: 'you', system: ''}[m.author] || '');
+  return `<div class="bubble ${cls}">${esc(m.body)}<span class="meta">${when(m.created_at)} ${who ? '· ' + who : ''} ${m.kind === 'template' ? '· template' : ''} ${m.status && m.status !== 'sent' ? '· ' + esc(m.status) : ''}</span></div>`;
+}
+function lineTable(rows, kind) {
+  if (!rows.length) return '';
+  const isOffer = kind === 'offer';
+  return `<h2>${isOffer ? 'Their stock' : 'What they want'}</h2><div class="tablewrap"><table>
+    <tr><th>Model</th><th>Grade</th><th class="num">Qty</th><th class="num">${isOffer ? 'Price' : 'Target'}</th><th>Status</th><th></th></tr>
+    ${rows.map(r => `<tr><td><b>${esc(r.model)}</b> ${r.storage_gb ? esc(r.storage_gb + 'GB') : ''}<div class="small muted">${esc(r.spec)} ${esc(r.notes)}</div></td>
+      <td>${esc(isOffer ? (r.grade_norm || r.grade) : (r.grades || 'any'))}</td><td class="num">${esc(r.qty ?? '—')}</td>
+      <td class="num">${isOffer ? esc(r.unit_price ?? '—') : esc(r.target_price ?? '—')} ${esc(r.currency)}</td><td>${esc(r.status)}</td>
+      <td>${lineButtons(r, isOffer)}</td></tr>`).join('')}</table></div>`;
+}
+function lineButtons(r, isOffer) {
+  const t = isOffer ? 'offers' : 'requirements';
+  const opts = isOffer ? [['sold', 'Sold'], ['expired', 'Expired'], ['available', 'Available']] : [['filled', 'Filled'], ['closed', 'Closed'], ['open', 'Open']];
+  return opts.filter(([s]) => s !== r.status).map(([s, l]) => `<button class="btn small ghost" data-line="${t}" data-id="${r.id}" data-status="${s}">${l}</button>`).join(' ');
+}
+function bindLineActions(root, after) {
+  root.querySelectorAll('[data-line]').forEach(b => b.onclick = () => run(async () => {
+    await api(`/api/${b.dataset.line}/${b.dataset.id}`, {method: 'PATCH', json: {status: b.dataset.status}}); after();
+  }, 'Updated'));
+}
+async function uploadList(input, contactId, kind) {
+  if (!input.files.length) return toast('Choose a file first', true);
+  const fd = new FormData(); fd.append('file', input.files[0]); fd.append('kind', kind || 'auto');
+  if (contactId) fd.append('contact_id', contactId);
+  const r = await run(async () => {
+    const res = await fetch('/api/stocklist', {method: 'POST', body: fd});
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || 'Upload failed');
+    return data;
+  });
+  if (r) toast(`Saved ${r.offers} stock lines, ${r.requirements} wanted lines`);
+  return r;
+}
+
+/* ---------------------------------------------------------------- stock & demand */
+loaders.stock = () => run(async () => {
+  const rows = await api('/api/offers?q=' + encodeURIComponent($('#stockSearch').value));
+  $('#stockTable').innerHTML = rows.length ? `<div class="tablewrap"><table>
+    <tr><th></th><th>Model</th><th>Grade</th><th class="num">Qty</th><th class="num">Price</th><th class="num">${esc(ECON.base_currency)}</th><th>Supplier</th><th>Added</th><th></th></tr>
+    ${rows.map(r => `<tr><td><input type="checkbox" class="stockPick" value="${r.id}" style="width:auto"></td>
+      <td><b>${esc(r.model)}</b> ${r.storage_gb ? esc(r.storage_gb + 'GB') : ''}<div class="small muted">${esc(r.spec)} ${esc(r.notes)}</div></td>
+      <td>${esc(r.grade_norm || r.grade)}</td><td class="num">${esc(r.qty ?? '—')}</td>
+      <td class="num">${esc(r.unit_price ?? '—')} ${esc(r.currency)}</td><td class="num">${money(r.price_base)}</td>
+      <td class="contact" data-cid="${r.contact_id || ''}">${esc(label({name: r.contact_name, company: r.contact_company}))}</td>
+      <td class="small muted">${when(r.created_at)}</td><td>${lineButtons(r, true)}</td></tr>`).join('')}
+  </table></div><div class="row" style="margin-top:8px"><button class="btn small" id="stockBlast">Stock blast from ticked lines</button></div>`
+  : '<div class="empty">No stock on file yet. It fills up as suppliers send lists.</div>';
+  $('#stockTable').querySelectorAll('td.contact').forEach(td => td.onclick = () => td.dataset.cid && openContact(td.dataset.cid));
+  bindLineActions($('#stockTable'), loaders.stock);
+  const sb = $('#stockBlast'); if (sb) sb.onclick = () => openBlast([...document.querySelectorAll('.stockPick:checked')].map(i => +i.value));
+});
+let stockT; $('#stockSearch').oninput = () => { clearTimeout(stockT); stockT = setTimeout(loaders.stock, 250); };
+$('#stockUploadBtn').onclick = () => uploadList($('#stockFile'), null, 'offers').then(loaders.stock);
+loaders.demand = () => run(async () => {
+  const rows = await api('/api/requirements');
+  $('#demandTable').innerHTML = rows.length ? `<div class="tablewrap"><table>
+    <tr><th>Model</th><th>Grades</th><th class="num">Qty</th><th class="num">Target</th><th>Buyer</th><th>Destination</th><th></th></tr>
+    ${rows.map(r => `<tr><td><b>${esc(r.model)}</b> ${r.storage_gb ? esc(r.storage_gb + 'GB') : ''}<div class="small muted">${esc(r.spec)} ${esc(r.notes)}</div></td>
+      <td>${esc(r.grades || 'any')}</td><td class="num">${esc(r.qty ?? '—')}</td>
+      <td class="num">${esc(r.target_price ?? '—')} ${esc(r.currency)}</td>
+      <td class="contact" data-cid="${r.contact_id || ''}">${esc(label({name: r.contact_name, company: r.contact_company}))}</td>
+      <td>${esc(r.destination)}</td><td>${lineButtons(r, false)}</td></tr>`).join('')}
+  </table></div>` : '<div class="empty">No buyer requirements yet.</div>';
+  $('#demandTable').querySelectorAll('td.contact').forEach(td => td.onclick = () => td.dataset.cid && openContact(td.dataset.cid));
+  bindLineActions($('#demandTable'), loaders.demand);
+});
+async function lineForm(kind) {
+  const isOffer = kind === 'offer';
+  const people = await run(() => api('/api/contacts')) || [];
+  modal(`<h2>${isOffer ? 'Add stock line' : 'Add buyer requirement'}</h2>
+    <div class="row"><div><label>Model</label><input id="lfModel" placeholder="iPhone 13 Pro / Latitude 5420"></div>
+      <div><label>Storage GB</label><input id="lfStorage" type="number"></div></div>
+    <div class="row"><div><label>Spec (CPU/RAM/layout…)</label><input id="lfSpec"></div>
+      <div><label>${isOffer ? 'Grade' : 'Accepted grades (comma)'}</label><input id="lfGrade" placeholder="${isOffer ? 'A' : 'A+, A'}"></div></div>
+    <div class="row"><div><label>Qty</label><input id="lfQty" type="number"></div>
+      <div><label>${isOffer ? 'Unit price' : 'Target price'}</label><input id="lfPrice" type="number" step="0.01"></div>
+      <div><label>Currency</label><input id="lfCcy" value="${esc(ECON.base_currency)}" maxlength="3"></div></div>
+    <label>${isOffer ? 'Supplier' : 'Buyer'} (optional)</label><select id="lfContact"><option value="">— none / our own —</option>
+      ${people.filter(p => !p.opted_out).map(p => `<option value="${p.id}">${esc(label(p))}</option>`).join('')}</select>
+    <button class="btn" id="lfSave" style="margin-top:10px">Save</button>`);
+  $('#lfSave').onclick = () => run(async () => {
+    const body = {model: $('#lfModel').value, storage_gb: $('#lfStorage').value, spec: $('#lfSpec').value,
+      qty: $('#lfQty').value, currency: $('#lfCcy').value, contact_id: +$('#lfContact').value || null};
+    if (isOffer) { body.grade = $('#lfGrade').value; body.unit_price = $('#lfPrice').value; }
+    else { body.grades = $('#lfGrade').value.split(',').map(s => s.trim()).filter(Boolean); body.target_price = $('#lfPrice').value; }
+    await api(isOffer ? '/api/offers' : '/api/requirements', {method: 'POST', json: body});
+    $('#modal').classList.remove('open'); (isOffer ? loaders.stock : loaders.demand)();
+  }, 'Saved');
+}
+$('#addOfferBtn').onclick = () => lineForm('offer');
+$('#addReqBtn').onclick = () => lineForm('req');
+
+/* ---------------------------------------------------------------- outreach */
+loaders.outreach = () => run(async () => {
+  const rows = await api('/api/outreach');
+  $('#outreachTable').innerHTML = rows.length ? `<div class="tablewrap"><table>
+    <tr><th>Contact</th><th>Campaign</th><th>Status</th><th>Stage</th><th>Sent</th></tr>
+    ${rows.map(r => `<tr><td class="contact" data-cid="${r.contact_id}">${esc(label(r))}</td><td>${esc(r.campaign)}</td>
+      <td><span class="badge ${r.status === 'sent' ? 'good' : r.status === 'failed' ? 'bad' : ''}">${esc(r.status)}</span>
+      ${r.error ? `<div class="small muted">${esc(r.error)}</div>` : ''}</td><td>${esc(r.stage)}</td><td class="small muted">${when(r.sent_at)}</td></tr>`).join('')}
+  </table></div>` : '<div class="empty">Nothing queued.</div>';
+  $('#outreachTable').querySelectorAll('td.contact').forEach(td => td.onclick = () => openContact(td.dataset.cid));
+});
+$('#importBtn').onclick = () => {
+  const f = $('#csvFile'); if (!f.files.length) return toast('Choose a CSV first', true);
+  const fd = new FormData(); fd.append('file', f.files[0]); fd.append('campaign', $('#campaign').value);
+  fd.append('consent_confirmed', $('#consent').checked ? 'true' : 'false');
+  run(async () => {
+    const res = await fetch('/api/outreach/import', {method: 'POST', body: fd});
+    const r = await res.json(); if (!res.ok) throw new Error(r.detail || 'Import failed');
+    $('#importResult').innerHTML = `Added ${r.added} · queued ${r.queued} · skipped ${r.skipped}` +
+      (r.problems.length ? '<br>' + r.problems.map(esc).join('<br>') : '') +
+      (!$('#consent').checked && !r.queued ? '<br>Nobody was queued: tick the consent box or add a consent column.' : '');
+    loaders.outreach();
+  });
+};
+
+/* ---------------------------------------------------------------- simulator */
+function renderSim(d) {
+  $('#simChat').innerHTML = d.messages.map(bubble).join('');
+  $('#simChat').scrollTop = $('#simChat').scrollHeight;
+  const o = d.outcome;
+  const act = {sent: 'Would send automatically', draft: 'Would send you a draft to approve', escalated: 'Handed to you (no reply)',
+    opted_out: 'Opted them out', error: 'Error', none: 'No reply'}[o.action] || o.action;
+  const r = o.result || {};
+  $('#simOutcome').innerHTML = `<b>${esc(act)}</b>${o.reason ? ` · ${esc(o.reason)}` : ''}
+    ${r.escalate ? `<p>⚠️ Escalation: ${esc(r.escalation_reason)}</p>` : ''}
+    ${r.summary_for_owner ? `<p>📝 ${esc(r.summary_for_owner)}</p>` : ''}
+    <p class="small">Stage: <b>${esc(d.contact.stage)}</b> · Type: <b>${esc(d.contact.type)}</b> · Score: ${d.contact.score}
+    ${o.offers_saved ? ` · ${o.offers_saved} stock lines saved` : ''}${o.requirements_saved ? ` · ${o.requirements_saved} wants saved` : ''}</p>`;
+  const facts = Object.entries(d.profile);
+  $('#simFacts').innerHTML = (facts.length ? `<div class="facts">${facts.map(([k, v]) => `<div class="fact"><b>${esc(k.replace(/_/g, ' '))}</b>${esc(v)}</div>`).join('')}</div>` : '<p class="hint">Nothing yet.</p>')
+    + lineTable(d.offers, 'offer') + lineTable(d.requirements, 'req');
+}
+$('#simSend').onclick = () => {
+  const text = $('#simText').value.trim(); if (!text) return;
+  $('#simSend').disabled = true; $('#simSend').textContent = 'Thinking…';
+  run(async () => {
+    const d = await api('/api/simulate', {method: 'POST', json: {text, name: $('#simName').value, phone: $('#simPhone').value}});
+    $('#simText').value = ''; renderSim(d);
+  }).finally(() => { $('#simSend').disabled = false; $('#simSend').textContent = 'Send as prospect'; });
+};
+$('#simReset').onclick = () => run(async () => {
+  await api('/api/simulate/reset', {method: 'POST', json: {phone: $('#simPhone').value}});
+  $('#simChat').innerHTML = '<div class="bubble note">Say hello as a supplier or buyer…</div>';
+  $('#simOutcome').textContent = 'Nothing yet.'; $('#simFacts').innerHTML = '';
+}, 'Cleared');
+loaders.simulator = () => {};
+
+/* ---------------------------------------------------------------- settings */
+loaders.settings = () => run(async () => {
+  const [s, sum] = await Promise.all([api('/api/settings'), loadSummary()]);
+  $('#modeChips').innerHTML = ['approve', 'auto'].map(m => `<button class="chip ${m === s.mode ? 'active' : ''}" data-m="${m}">${m === 'approve' ? 'Approve every reply' : 'Auto (safe replies only)'}</button>`).join('');
+  $('#modeChips').querySelectorAll('.chip').forEach(c => c.onclick = () => run(async () => {
+    await api('/api/settings', {method: 'PUT', json: {mode: c.dataset.m}}); loaders.settings();
+  }, 'Mode updated'));
+  $('#setMargin').value = s.target_margin_pct; $('#setCpu').value = s.cost_per_unit; $('#setPct').value = s.cost_pct;
+  $('#setBase').value = s.base_currency;
+  $('#setFx').value = Object.entries(s.fx_rates).map(([k, v]) => `${k}=${v}`).join('\n');
+  $('#statusInfo').innerHTML = `Model: ${esc(sum.model)} · WhatsApp: ${sum.whatsapp_live ? 'connected' : 'dry run (set WHATSAPP_TOKEN + WHATSAPP_PHONE_NUMBER_ID)'} · Alerts to your WhatsApp: ${sum.owner_alerts ? 'on' : 'off (set OWNER_WHATSAPP)'}`;
+});
+$('#saveSettings').onclick = () => run(async () => {
+  const fx = {};
+  $('#setFx').value.split(/\n|,/).forEach(l => { const [k, v] = l.split('='); if (k && v && !isNaN(+v)) fx[k.trim().toUpperCase()] = +v; });
+  await api('/api/settings', {method: 'PUT', json: {target_margin_pct: $('#setMargin').value, cost_per_unit: $('#setCpu').value,
+    cost_pct: $('#setPct').value, base_currency: $('#setBase').value, fx_rates: fx}});
+  loaders.settings();
+}, 'Saved');
+$('#runJobs').onclick = () => run(async () => { const r = await api('/api/jobs/run', {method: 'POST'});
+  toast(`Follow-ups: ${r.followups} · outreach sent: ${r.outreach}`); });
+$('#showDigest').onclick = () => run(async () => { const r = await api('/api/digest'); const p = $('#digestOut'); p.hidden = false; p.textContent = r.text; });
+
+/* ---------------------------------------------------------------- boot */
+let start = 'today'; try { start = localStorage.getItem('td-tab') || 'today'; } catch (e) {}
+showTab(document.getElementById(start) ? start : 'today');
+if (start !== 'today') loadSummary().catch(() => {});
+setInterval(() => { if (document.visibilityState === 'visible' && $('#today').classList.contains('active')) loaders.today(); }, 30000);
+</script>
+</body>
+</html>

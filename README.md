@@ -1,4 +1,16 @@
-# REPOCKET — Stock Blast Studio
+# REPOCKET
+
+Two tools for REPOCKET — Refurbished Mobiles & Devices Trader:
+
+- **[Trade Desk](docs/TRADE_DESK.md)**: a WhatsApp assistant that talks to ITAD suppliers and device
+  buyers in Deepak's voice, qualifies them, collects stock lists and requirements, and shows which trades
+  clear your margin. Python/FastAPI + Claude + WhatsApp Cloud API. Setup guide: [`docs/TRADE_DESK.md`](docs/TRADE_DESK.md).
+- **Stock Blast Studio** (below): branded stock posters for WhatsApp, LinkedIn and email. The Trade Desk
+  can open it pre-filled with the lines you want to blast.
+
+---
+
+# Stock Blast Studio
 
 A lightweight, browser-based tool for creating branded **stock-blast** posts for
 **REPOCKET — Refurbished Mobiles & Devices Trader**. Fill in your stock, pick an

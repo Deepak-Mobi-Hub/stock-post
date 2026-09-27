@@ -628,8 +628,28 @@ document.getElementById('copyBtn').onclick=async()=>{
   }
 };
 
+/* ============ prefill from Trade Desk (#data=<base64url json>) ============ */
+function applyHashData(){
+  const m=location.hash.match(/^#data=([A-Za-z0-9_-]+)/);
+  if(!m) return;
+  try{
+    const b64=m[1].replace(/-/g,'+').replace(/_/g,'/');
+    const bytes=Uint8Array.from(atob(b64+'='.repeat((4-b64.length%4)%4)),c=>c.charCodeAt(0));
+    const d=JSON.parse(new TextDecoder().decode(bytes));
+    if(typeof d.headline==='string') state.headline=d.headline.slice(0,26);
+    if(typeof d.currency==='string') state.currency=d.currency.slice(0,4);
+    if(Array.isArray(d.items)&&d.items.length){
+      state.items=d.items.slice(0,8).map(it=>({
+        model:String(it.model||'').slice(0,40), spec:String(it.spec||''), grade:String(it.grade||''),
+        qty:String(it.qty||''), price:String(it.price||'')}));
+    }
+    ['headline','currency'].forEach(id=>{ document.getElementById(id).value=state[id]; });
+  }catch(e){ console.warn('Could not read stock data from link',e); }
+}
+
 /* ============ boot ============ */
 function boot(){
+  applyHashData();
   buildOrient(); buildThemes(); buildPresets(); buildItems();
   render();
 }

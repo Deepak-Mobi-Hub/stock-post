@@ -1,0 +1,4 @@
+phone,name,company,type,country,consent,notes
++49 151 00000001,Markus Example,Example ITAD GmbH,supplier,Germany,yes,Met at EBM Portugal; laptops
++33 6 00 00 00 02,Elena Example,Example Refurb SAS,buyer,France,yes,Wants Latitude 5420 grade B
++44 7700 900003,Tom Example,Example Trading Ltd,both,UK,no,Email only for now

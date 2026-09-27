@@ -33,10 +33,16 @@ jobs:
           # Auto-enable GitHub Pages for the repo on first run
           enablement: true
 
+      # Publish only the Stock Blast Studio page, not the Trade Desk backend
+      - name: Stage site
+        run: |
+          mkdir -p _site
+          cp index.html .nojekyll _site/
+
       - name: Upload site artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: "."
+          path: "_site"
 
       - name: Deploy to GitHub Pages
         id: deployment
